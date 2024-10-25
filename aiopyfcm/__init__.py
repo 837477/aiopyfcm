@@ -3,6 +3,7 @@ aiopyfcm
 """
 
 from .message import Message
+from .authenticator import PyFCMAuthenticator
 from .aiopyfcm import AioPyFCM
 from .errors import (
     InvalidCredentialsError,
@@ -29,6 +30,7 @@ __LICENSE__ = 'MIT License'
 
 __all__ = [
     'Message',
+    'PyFCMAuthenticator',
     'AioPyFCM',
     'InvalidCredentialsError',
     'AioPyFCMError',

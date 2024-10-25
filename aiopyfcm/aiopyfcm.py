@@ -1,6 +1,5 @@
 import aiohttp
-from typing import Union
-from .pyfcm_auth import PyFCMAuthenticator
+from .authenticator import PyFCMAuthenticator
 from .message import Message
 from .errors import (
     UnspecifiedError, InvalidArgumentError, UnregisteredError,
@@ -9,20 +8,25 @@ from .errors import (
 )
 
 
-class AioPyFCM(PyFCMAuthenticator):
+class AioPyFCM:
+
+    def __init__(
+        self,
+        authenticator: PyFCMAuthenticator
+    ):
+        """AioPyFCM Initialization"""
+        self.authenticator = authenticator
+        self.session = None
+        self.endpoint = "https://fcm.googleapis.com"
 
     async def __aenter__(self):
+        """Open a session when entering the context."""
         self.session = aiohttp.ClientSession()
         return self
 
     async def __aexit__(self, exc_type, exc, tb):
+        """Close the session when exiting the context."""
         await self.session.close()
-
-    def __init__(self):
-        """AioPyFCM Initialization"""
-        super().__init__()
-        self.session = None
-        self.endpoint = "https://fcm.googleapis.com"
 
     async def send(self, message: Message):
         """
@@ -32,40 +36,50 @@ class AioPyFCM(PyFCMAuthenticator):
         :return: JSON response from the FCM Server.
         """
         if not self.session:
+            # stateless mode: open a new session every time
             async with aiohttp.ClientSession() as session:
-                self.session = session
-                return await self._post_message(message)
+                return await self._post_message(message, session)
         else:
-            return await self._post_message(message)
+            # stateful mode: use the existing session
+            return await self._post_message(message, self.session)
 
-    async def _post_message(self, message: Message):
+    async def _post_message(
+        self,
+        message: Message,
+        session: aiohttp.ClientSession
+    ):
         """
         Internal method to post a message.
+
+        :param message: The message to send.
+        :param session: The aiohttp session to use.
         """
-        async with self.session.post(
-            url=f"{self.endpoint}/v1/projects/{self.project_id}/messages:send",
+        async with session.post(
+            url=f"{self.endpoint}/v1/projects/{self.authenticator.project_id}/messages:send",
             headers={
-                "Authorization": f"Bearer {self.access_token}",
+                "Authorization": f"Bearer {self.authenticator.access_token}",
                 "Content-Type": "application/json"
             },
             json={"message": message}
         ) as response:
             result = await response.json()
-            if response.status == 200:
-                return result
-            elif response.status == 400:
-                raise InvalidArgumentError(result)
-            elif response.status == 401:
-                raise ThirdPartyAuthError(result)
-            elif response.status == 403:
-                raise SenderIdMismatchError(result)
-            elif response.status == 404:
-                raise UnregisteredError(result)
-            elif response.status == 429:
-                raise QuotaExceededError(result)
-            elif response.status == 500:
-                raise InternalServerError(result)
-            elif response.status == 503:
-                raise UnavailableError(result)
-            else:
-                raise UnspecifiedError(result)
+            return await self._handle_response(response, result)
+
+    @staticmethod
+    async def _handle_response(
+        response: aiohttp.ClientResponse,
+        result: dict
+    ):
+        """Handle various FCM response codes."""
+        if response.status == 200:
+            return result
+        errors = {
+            400: InvalidArgumentError,
+            401: ThirdPartyAuthError,
+            403: SenderIdMismatchError,
+            404: UnregisteredError,
+            429: QuotaExceededError,
+            500: InternalServerError,
+            503: UnavailableError,
+        }
+        raise errors.get(response.status, UnspecifiedError)(result)

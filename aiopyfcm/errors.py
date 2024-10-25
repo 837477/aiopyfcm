@@ -13,7 +13,7 @@ class InvalidCredentialsError(Exception):
 
 class AioPyFCMError(Exception):
     """
-    Raised when an error occurs in AsyncPyFCM.
+    Raised when an error occurs in AioPyFCM.
     """
     pass
 

@@ -128,6 +128,7 @@ class Message(TypedDict):
     FCM Message Resource
     https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages
     """
+    token: str
     name: Optional[str]
     data: Optional[dict[str, str]]
     notification: Optional[Notification]
@@ -135,6 +136,5 @@ class Message(TypedDict):
     webpush: Optional[WebpushConfig]
     apns: Optional[ApnsConfig]
     fcm_options: Optional[FcmOptions]
-    token: str
     topic: Optional[str]
     condition: Optional[str]
