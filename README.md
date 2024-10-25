@@ -148,7 +148,7 @@ async def send_stateful_sample():
 
 async def send_stateless_sample():
     """
-    This sample uses the AsyncPyFCM object by declaring it.
+    This sample uses the AioPyFCM object by declaring it.
     This method does not maintain the aiohttp asynchronous session,
     so it connects the session every time you send.
     """
