@@ -131,14 +131,17 @@ def sample_refresh_access_token():
 ```
 
 ### Send Message
-This sample is used when you want to maintain an asynchronous session of aiohttp.<br>
-You can use resources efficiently by not opening a session every time you send.
+This sample shows how to send a message to FCM.
 
 ```Python
 import asyncio
 import aiopyfcm
 
 async def send_stateful():
+    """ 
+    This sample is used when you want to maintain an asynchronous session of aiohttp.
+    You can use resources efficiently by not opening a session every time you send.
+    """
     # Get the PyFCMAuthenticator object.
     authenticator = sample_authenticate()
 
