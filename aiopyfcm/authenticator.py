@@ -30,6 +30,10 @@ class PyFCMAuthenticator:
             self.refresh_credentials()
         return self._credentials.token
 
+    def update_auto_refresh(self, auto_refresh: bool):
+        """Update auto refresh setting"""
+        self.auto_refresh = auto_refresh
+
     def refresh_credentials(self):
         """Refresh credentials"""
         now_time = time.time()
